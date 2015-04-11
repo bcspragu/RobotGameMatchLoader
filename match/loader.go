@@ -11,9 +11,11 @@ import (
 	"strconv"
 )
 
+var client *http.Client
+
 func init() {
 	gob.Register(Match{})
-	gob.Register([]interface{}{})
+	client = &http.Client{}
 }
 
 type MatchResult struct {
@@ -26,7 +28,15 @@ func LoadMatch(matchIDs <-chan uint64, loaded chan<- MatchResult) {
 	var matchRes MatchResult
 	for matchID := range matchIDs {
 		fmt.Println("Loading", matchID)
-		matchResp, err := http.Get(matchURL(matchID))
+		req, err := http.NewRequest("GET", matchURL(matchID), nil)
+		if err != nil {
+			matchRes.Err = err
+			loaded <- matchRes
+			continue
+		}
+		req.Close = true
+
+		matchResp, err := client.Do(req)
 		if err != nil {
 			matchRes.Err = err
 			loaded <- matchRes
