@@ -69,6 +69,7 @@ func LoadMatch(matchIDs <-chan uint64, loaded chan<- MatchResult) {
 
 func LoadNewMatches() (int, error) {
 	var err error
+	var matchRes MatchResult
 	db, err = bolt.Open("match.db", 0600, nil)
 	if err != nil {
 		panic(err)
@@ -107,7 +108,7 @@ func LoadNewMatches() (int, error) {
 		}
 
 		// Load from the worker pool
-		matchRes := <-loaded
+		matchRes = <-loaded
 		if matchRes.Err != nil {
 			fmt.Printf("Error loading %d: %q, retrying\n", matchRes.MatchID, matchRes.Err)
 			newMatchIDs <- matchRes.MatchID
