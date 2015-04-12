@@ -2,6 +2,7 @@ package match
 
 import (
 	"encoding/binary"
+	"fmt"
 	"github.com/boltdb/bolt"
 )
 
@@ -31,6 +32,8 @@ func init() {
 			id, _ := binary.Uvarint(k)
 			loadedMatches[id] = true
 		}
+
+		fmt.Println("Loaded", len(loadedMatches), "matches from DB")
 
 		return err
 	})

@@ -2,6 +2,7 @@ package match
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/binary"
 	"encoding/gob"
 	"encoding/json"
@@ -11,11 +12,18 @@ import (
 	"strconv"
 )
 
-var client *http.Client
+var (
+	tr = &http.Transport{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
+		DisableKeepAlives: true,
+	}
+	client = http.Client{Transport: tr}
+)
 
 func init() {
 	gob.Register(Match{})
-	client = &http.Client{}
 }
 
 type MatchResult struct {
@@ -28,6 +36,7 @@ func LoadMatch(matchIDs <-chan uint64, loaded chan<- MatchResult) {
 	var matchRes MatchResult
 	for matchID := range matchIDs {
 		fmt.Println("Loading", matchID)
+		matchRes.MatchID = matchID
 		req, err := http.NewRequest("GET", matchURL(matchID), nil)
 		if err != nil {
 			matchRes.Err = err
@@ -100,13 +109,15 @@ func LoadNewMatches() (int, error) {
 		// Load from the worker pool
 		matchRes := <-loaded
 		if matchRes.Err != nil {
-			return loadedCount, matchRes.Err
+			fmt.Printf("Error loading %d: %q, retrying\n", matchRes.MatchID, matchRes.Err)
+			newMatchIDs <- matchRes.MatchID
+			continue
 		}
 
 		// Keep our in-memory representation up to date
 		loadedMatches[matchRes.MatchID] = true
 		if err := toDB(matchRes); err != nil {
-			return loadedCount, err
+			fmt.Printf("Error persisting %d to BoltDB: %q, skipping\n", matchRes.MatchID, matchRes.Err)
 		}
 
 		loadedCount++
@@ -124,7 +135,6 @@ func toDB(matchRes MatchResult) error {
 		// We make a []byte representation of our matchID
 		buf := make([]byte, binary.MaxVarintLen64)
 		binary.PutUvarint(buf, matchRes.MatchID)
-
 		// Now we encode our Match as a []byte, in compact, gobby format
 		var serialMatch bytes.Buffer
 		enc := gob.NewEncoder(&serialMatch)
