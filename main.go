@@ -4,9 +4,11 @@ import (
 	"./match"
 	"fmt"
 	"time"
+	"runtime"
 )
 
 func main() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
 	for {
 		fmt.Println("Loading new matches")
 		c, err := match.LoadNewMatches()
