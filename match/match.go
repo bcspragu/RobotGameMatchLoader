@@ -1,8 +1,10 @@
 package match
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"strconv"
 	"strings"
 )
 
@@ -90,4 +92,28 @@ func (a *Action) UnmarshalJSON(b []byte) error {
 		}
 	}
 	return nil
+}
+
+func (m *Match) GridString(round int) string {
+	loc := make([][]int, 18)
+	for i := 0; i < 18; i++ {
+		loc[i] = make([]int, 18)
+	}
+
+	for _, move := range m.Data.History.Moves[round] {
+		pos := move.Location
+		loc[pos[0]][pos[1]] = ((move.PlayerID * 2) - 1)
+	}
+
+	var buffer bytes.Buffer
+
+	for i := 0; i < 18; i++ {
+		for j := 0; j < 18; j++ {
+			buffer.WriteString(strconv.Itoa(loc[i][j]))
+			buffer.WriteString(" ")
+		}
+	}
+	buffer.WriteString("\n")
+
+	return buffer.String()
 }
