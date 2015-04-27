@@ -109,6 +109,7 @@ func LoadNewMatches() (int, error) {
 
 		// Load from the worker pool
 		matchRes = <-loaded
+
 		if matchRes.Err != nil {
 			fmt.Printf("Error loading %d: %q, retrying\n", matchRes.MatchID, matchRes.Err)
 			newMatchIDs <- matchRes.MatchID
@@ -117,6 +118,13 @@ func LoadNewMatches() (int, error) {
 
 		// Keep our in-memory representation up to date
 		loadedMatches[matchRes.MatchID] = true
+
+		if len(matchRes.Match.Data.History.Moves) == 0 {
+			fmt.Printf("No history data for %d, skipping", matchRes.MatchID)
+			loadedCount++
+			continue
+		}
+
 		if err := toDB(matchRes); err != nil {
 			fmt.Printf("Error persisting %d to BoltDB: %q, skipping\n", matchRes.MatchID, matchRes.Err)
 		}

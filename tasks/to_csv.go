@@ -1,13 +1,12 @@
 package main
 
 import (
-	"./match"
+	"../match"
 	"bufio"
 	"bytes"
 	"encoding/gob"
 	"github.com/boltdb/bolt"
 	"os"
-	"strconv"
 )
 
 func main() {
@@ -19,17 +18,10 @@ func main() {
 	}
 	defer db.Close()
 
-	writers := make([]*bufio.Writer, 50)
-	for i := 0; i < 50; i++ {
-		f, err := os.Create("rounds/out" + strconv.Itoa(i) + ".csv")
-		if err != nil {
-			panic(err)
-		}
-		defer f.Close()
-		writers[i] = bufio.NewWriter(f)
-	}
+	f, err := os.Create("rounds.csv")
+	writer := bufio.NewWriter(f)
 
-	db.View(func(tx *bolt.Tx) error {
+	db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("Records"))
 		b.ForEach(func(k, v []byte) error {
 			var match match.Match
@@ -38,15 +30,16 @@ func main() {
 			if err != nil {
 				return err
 			}
-			for i := 0; i < 50; i++ {
-				writers[i].WriteString(match.GridString(i))
+			if match.Winner == match.R1ID {
+				writer.WriteString("-1 ")
+			} else {
+				writer.WriteString("1 ")
 			}
+			writer.WriteString(match.GridString())
 			return nil
 		})
 		return nil
 	})
 
-	for i := 0; i < 50; i++ {
-		writers[i].Flush()
-	}
+	writer.Flush()
 }

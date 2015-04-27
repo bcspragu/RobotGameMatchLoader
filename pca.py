@@ -3,11 +3,11 @@ from skimage.io import imsave
 from skimage.transform import rescale
 from sklearn.decomposition import PCA
 
-for x in range(50):
-    data = np.loadtxt("rounds/out" + str(x) + ".csv", dtype=int)
-    dr = PCA(n_components=5)
-    dr.fit(data)
-    for i, component in enumerate(dr.components_):
-        c = component.reshape(18,18)
-        c = rescale(c, 32, order=0)
-        imsave("rounds/out" + str(x) + "-component" + str(i) + ".png", c)
+data = np.loadtxt("rounds.csv", dtype=int)
+# Our new representation is the number of data cases by our new basis of
+# 10-elements per round, plus the label
+ndata = np.zeros([len(data), 10 * 100 + 1)])
+for i in range(100):
+    dr = PCA(n_components=10)
+    # Fit to one round of positions
+    dr.fit_transform(data[:,(1 + 289 * i):(1 + 289 * (i + 1))])

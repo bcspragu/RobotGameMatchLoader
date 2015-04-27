@@ -37,4 +37,8 @@ func init() {
 
 		return err
 	})
+
+	if err != nil {
+		panic(err)
+	}
 }
