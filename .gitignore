@@ -1,5 +1,3 @@
 match.db
 output
-rounds
-rounds.csv
-rounds_sample.csv
+rounds*
