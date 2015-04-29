@@ -1,3 +1,4 @@
 match.db
 output
 rounds*
+*.npy

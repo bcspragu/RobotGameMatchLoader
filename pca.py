@@ -1,7 +1,10 @@
 import numpy as np
 from sklearn.decomposition import PCA
 
-filename = "rounds_sample.csv"
+# Load in the text file produced by locations.go, and run PCA on each round to
+# reduce the dimensionality
+
+filename = "rounds.csv"
 data = np.loadtxt(filename, dtype=int)
 
 # Our new representation is the number of data cases by our new basis of

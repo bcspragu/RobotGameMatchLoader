@@ -118,3 +118,24 @@ func (m *Match) GridString() string {
 
 	return buffer.String()
 }
+
+func (m *Match) SynthString() string {
+	var numBots [100][2]int
+
+	for roundNumber, round := range m.Data.History.Moves {
+		for _, move := range round {
+			numBots[roundNumber][move.PlayerID] += 1
+		}
+	}
+	var buffer bytes.Buffer
+
+	for i := 0; i < 2; i++ {
+		for r := 0; r < 100; r++ {
+			buffer.WriteString(strconv.Itoa(numBots[r][i]))
+			buffer.WriteString(" ")
+		}
+	}
+	buffer.WriteString("\n")
+
+	return buffer.String()
+}
